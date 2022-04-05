@@ -1,38 +1,32 @@
 ****************************************
 *               New Game               *
 ****************************************
-Mon Apr  4 22:42:45 2022
+Tue Apr  5 14:09:50 2022
 ----------   New Combat   ----------
-Mon Apr  4 22:42:46 2022
+Tue Apr  5 14:09:50 2022
 Happened in room(1): 
 Initiative list: 
-    1. 平民(3)      (d20+0=20) 
-    2. 平民(2)      (d20+0=20) 
-    3. 库斯克        (d20+2=14) 
-    4. 平民         (d20+0=5) 
+    1. 平民(3)      (d20+0=21) 
+    2. 平民         (d20+0=21) 
+    3. 库斯克        (d20+2=21) 
+    4. 平民(2)      (d20+0=20) 
+    5. 平民(4)      (d20+0=4) 
 第1轮战斗：
-    平民(3)(HP=4/4): hit=18, failed, aim=库斯克(HP=20/20) 
-    平民(2)(HP=4/4): hit=12, failed, aim=库斯克(HP=20/20) 
-    库斯克(HP=20/20): Great Failure, 1 hurt to self. 
-    平民(HP=4/4): Great Success, hit=22, hurt=2, aim=库斯克(HP=17/20) 
+    平民(3)(HP=4/4): hit=12, failed, aim=库斯克(HP=20/20) 
+    平民(HP=4/4): hit=11, failed, aim=库斯克(HP=20/20) 
+    库斯克(HP=20/20): hit=12, hurt=3, aim=平民(4)(HP=1/4) 
+    平民(2)(HP=4/4): hit=14, failed, aim=库斯克(HP=20/20) 
+    平民(4)(HP=1/4): hit=5, failed, aim=库斯克(HP=20/20) 
 第2轮战斗：
-    平民(3)(HP=4/4): hit=7, failed, aim=库斯克(HP=17/20) 
-    平民(2)(HP=4/4): hit=19, hurt=4, aim=库斯克(HP=13/20) 
-    库斯克(HP=13/20): hit=14, hurt=8, aim=平民(HP=-4/4) 
-    平民(HP=-4/4): skiped 
+    平民(3)(HP=4/4): Great Success, hit=22, hurt=8, aim=库斯克(HP=12/20) 
+    平民(HP=4/4): hit=14, failed, aim=库斯克(HP=12/20) 
+    库斯克(HP=12/20): hit=7, failed, aim=平民(HP=4/4) 
+    平民(2)(HP=4/4): hit=6, failed, aim=库斯克(HP=12/20) 
+    平民(4)(HP=1/4): hit=14, failed, aim=库斯克(HP=12/20) 
 第3轮战斗：
-    平民(3)(HP=4/4): hit=6, failed, aim=库斯克(HP=13/20) 
-    平民(2)(HP=4/4): hit=8, failed, aim=库斯克(HP=13/20) 
-    库斯克(HP=13/20): hit=15, hurt=3, aim=平民(3)(HP=1/4) 
-    平民(HP=-4/4): skiped 
-第4轮战斗：
-    平民(3)(HP=1/4): hit=16, failed, aim=库斯克(HP=13/20) 
-    平民(2)(HP=4/4): hit=18, failed, aim=库斯克(HP=13/20) 
-    库斯克(HP=13/20): hit=21, hurt=5, aim=平民(3)(HP=-4/4) 
-    平民(HP=-4/4): skiped 
-第5轮战斗：
-    平民(3)(HP=-4/4): skiped 
-    平民(2)(HP=4/4): Great Failure, 6 hurt to self. 
-    库斯克(HP=13/20): hit=18, hurt=6, aim=平民(2)(HP=-8/4) 
-Combat is over. 
-    库斯克(HP=13/20): skiped 
+    平民(3)(HP=4/4): hit=17, failed, aim=库斯克(HP=12/20) 
+    平民(HP=4/4): Great Success, hit=22, hurt=8, aim=库斯克(HP=4/20) 
+    库斯克(HP=4/20): hit=22, hurt=5, aim=平民(4)(HP=-4/4) 
+    平民(2)(HP=4/4): hit=19, hurt=4, aim=库斯克(HP=0/20) 
+Combat FAIL. 
+    库斯克(HP=0/20)

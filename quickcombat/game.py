@@ -55,8 +55,9 @@ class Game(Team):
     def add_room_obj(self, *r): 
         self.rooms += list(r)
 
-    def add_room(self, *enemies, name=None, arrive=False): 
+    def add_room(self, *enemies, copy_times=1, name=None, arrive=False): 
         if not name: name = self.__new_room_name()
+        if copy_times > 1: enemies = list(enemies)*copy_times
         r = Room(*enemies, name=name)
         self.rooms.append(r)
         if arrive: self.goto_room(r)
@@ -84,7 +85,7 @@ class Game(Team):
             f.write('\n')
             f.write(f"Happened in {self.__current.name}: \n")
             f.write("Initiative list: \n")
-            f.write(self.repr_init())
+            f.write(self.get_init_repr())
             f.close()
         self.__round = 0
         while self.combating: 
@@ -101,7 +102,7 @@ class Game(Team):
         self.__sort_init()
         if report: 
             print('先攻列表：')
-            print(self.repr_init())
+            print(self.get_init_repr())
 
     def __sort_init(self): 
         lst = list(self.__init_dict.keys())
@@ -114,7 +115,7 @@ class Game(Team):
         sorted.reverse()
         self.__init_list = sorted
 
-    def repr_init(self): 
+    def get_init_repr(self): 
         repr = ''
         for i,c in enumerate(self.__init_list): 
             repr += f"    {i+1}. "
@@ -151,7 +152,7 @@ class Game(Team):
                 self.cease_fire()
                 break
             if all([not c.active for c in self.cards]): 
-                print('全部队员失去战斗力，失败。')
+                print('全员失去战斗力，失败。')
                 f = open(self.file,'a')
                 f.write('Combat FAIL. \n')
                 f.close()
@@ -160,10 +161,11 @@ class Game(Team):
 
     def __rand_aim(self, c):
         if c in self.cards: 
-            aim = random.sample(self.__current.cards, 1)[0]
+            alives = list(filter(lambda c: c.active, self.__current.cards))
+            return random.sample(alives, 1)[0]
         elif c in self.__current.cards: 
-            aim = random.sample(self.cards, 1)[0]
-        return aim
+            alives = list(filter(lambda c: c.active, self.cards))
+            return random.sample(alives, 1)[0]
 
     def __round_action(self, c, aim): 
         f = open(self.file,'a')
@@ -171,7 +173,7 @@ class Game(Team):
         f.write(f"    {c.name}(HP={c.hp}/{c.hpmax}): ")
         hit = d20() 
         if hit == 1: 
-            hurt = d6()
+            hurt = random.randint(1, c.hurt_rand) + c.hurt_add
             c.hp -= hurt
             repr += f"（大失败，对自身造成{hurt}伤害）"
             f.write(f"Great Failure, {hurt} hurt to self. \n")
@@ -214,12 +216,12 @@ class Game(Team):
         self.team_info()
 
     def team_info(self):
-        repr = "团队成员情况："
-        for c in self.cards: 
-            repr += "    %-10s" % c.name
-            repr += f"HP={c.hp}/{c.hpmax} \n"
+        print("团队成员情况：")
         f = open(self.file,'a')
-        f.write(f"    {c.name}(HP={c.hp}/{c.hpmax}): skiped \n")
+        for c in self.cards: 
+            s = "    %-10s" % c.name + f"HP={c.hp}/{c.hpmax}"
+            print(s)
+            f.write(f"    {c.name}(HP={c.hp}/{c.hpmax})\n")
         f.close()
 
 

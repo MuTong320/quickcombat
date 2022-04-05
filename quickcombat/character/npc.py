@@ -2,7 +2,9 @@ from ..card import CharacterCard
 from ..dice import *
 
 def commoner(random=True): 
-    HP = 4
-    if random: HP = d8()
+    if random: 
+        HP = d8()
+    else: 
+        HP = 4
     c = CharacterCard(HP=HP)
     return c
