@@ -9,8 +9,10 @@ from .room import Room, Team
 class Game(Team): 
     def __init__(self, *player_cards, file=None): 
         super().__init__(*player_cards)
-        self.__first_room()
-        self.combating = False
+        self.__init_file(file)
+        self.__set_world()
+
+    def __init_file(self, file):
         if file: 
             self.file = file
             f = open(self.file,'w')
@@ -25,21 +27,22 @@ class Game(Team):
         f.close()
     
     def __repr__(self): 
-        repr = '团队成员：\n'
+        s = '团队成员：\n'
         for c in self.cards: 
-            repr += f"    {c.name} (HP = {c.hp}/{c.hpmax})"
-            if not c.active: repr += '（失能）'
-            repr += '\n'
+            s += f"    {c.name} (HP = {c.hp}/{c.hpmax})"
+            if not c.active: s += '（失能）'
+            s += '\n'
         all_room = [r.name for r in self.rooms]
-        repr += f"已探明房间：{all_room}\n"
-        if self.combating: repr += '（战斗中）'
-        repr += f"小队现在位于{self.__current.room_info()}\n"
-        return repr
+        s += f"已探明房间：{all_room}\n"
+        if self.combating: s += '（战斗中）'
+        s += f"小队现在位于{self.__current.room_info()}\n"
+        return s
 
-    def __first_room(self): 
-        origin       = Room(name='origin')
-        self.rooms   = [origin, ]
-        self.__current =  origin
+    def __set_world(self): 
+        self.world     = Room(name='World')
+        self.rooms     = [self.world, ]
+        self.__current = self.world
+        self.combating = False
     
     def goto_room(self, room):
         if type(room) == str: room = self.get_room(room)
@@ -58,6 +61,8 @@ class Game(Team):
     def add_room(self, *enemies, copy_times=1, name=None, arrive=False): 
         if not name: name = self.__new_room_name()
         if copy_times > 1: enemies = list(enemies)*copy_times
+        self.world.add_card(*enemies)
+        enemies = self.world.cards[-len(enemies):]
         r = Room(*enemies, name=name)
         self.rooms.append(r)
         if arrive: self.goto_room(r)
@@ -77,32 +82,41 @@ class Game(Team):
         if room: self.goto_room(room)
         self.__init_dict = {}
         all_card = self.cards + self.__current.cards
-        self.auto_init(*all_card)
+        self.__auto_init(*all_card)
         self.combating = True
+        pl_time = time.asctime()
         with open(self.file,'a') as f: 
             f.write("----------   New Combat   ----------\n")
-            f.write(time.asctime())
+            f.write(pl_time)
             f.write('\n')
             f.write(f"Happened in {self.__current.name}: \n")
             f.write("Initiative list: \n")
-            f.write(self.get_init_repr())
+            f.write(self.__get_init_repr())
             f.close()
         self.__round = 0
+        for c in all_card: 
+            c.combat_number += 1
+            c.history.append({
+                'type': 'combat', 
+                'time': pl_time, 
+                'room': self.__current.name, 
+                'round': {}
+            })
         while self.combating: 
             self.auto_round()
             if self.__round == round: break
 
-    def auto_init(self, *characters, report=True): 
+    def __auto_init(self, *characters, report=True): 
         for c in characters: 
             if type(c) == str: c = self.get_card(c)
             if type(c) == CharacterCard: 
-                init = d20() + c.hit_add
+                init = c.get_init()
                 self.__init_dict[c] = init
                 if report: print(f"{c.name}的先攻是{init}.")
         self.__sort_init()
         if report: 
             print('先攻列表：')
-            print(self.get_init_repr())
+            print(self.__get_init_repr())
 
     def __sort_init(self): 
         lst = list(self.__init_dict.keys())
@@ -115,13 +129,13 @@ class Game(Team):
         sorted.reverse()
         self.__init_list = sorted
 
-    def get_init_repr(self): 
-        repr = ''
+    def __get_init_repr(self): 
+        s = ''
         for i,c in enumerate(self.__init_list): 
-            repr += f"    {i+1}. "
-            repr += "%-10s" % c.name
-            repr += f" (d20+{c.init_add}={self.__init_dict[c]}) \n"
-        return repr
+            s += f"    {i+1}. "
+            s += "%-10s" % c.name
+            s += f" (initiative={self.__init_dict[c]}) \n"
+        return s
     
     def manual_init(self, **character_value): 
         for c, init in character_value.items(): 
@@ -132,32 +146,64 @@ class Game(Team):
     
     def auto_round(self): 
         self.__round += 1
-        s = f"第{self.__round}轮战斗："
-        f = open(self.file,'a')
-        f.write(s)
-        f.write('\n')
-        f.close()
-        print(s)
+        print(f"第{self.__round}轮战斗：")
+        with open(self.file,'a') as f: 
+            f.write(f"{self.__round}th round: \n")
+            f.close()
         for c in self.__init_list: 
             if c.active: 
-                aim = self.__rand_aim(c)
-                self.__round_action(c, aim)
+                act_dict = self.__round_action(c)
             else: 
-                self.__round_skip(c)
-            if all([not c.active for c in self.__current.cards]): 
-                print('所有敌人已被消灭。')
-                f = open(self.file,'a')
-                f.write('Combat is over. \n')
+                act_dict = self.__skip_round(c)
+            c.history[-1]['round'][self.__round] = act_dict
+            screen = '    ' + c.natural_format(act_dict)
+            print(screen)
+            with open(self.file,'a') as f: 
+                line = '    ' + c.natural_format(act_dict, hp=True) + '\n'
+                f.write(line)
                 f.close()
-                self.cease_fire()
-                break
-            if all([not c.active for c in self.cards]): 
-                print('全员失去战斗力，失败。')
-                f = open(self.file,'a')
-                f.write('Combat FAIL. \n')
-                f.close()
-                self.cease_fire()
-                break
+            if self.__check_break_combat(): break
+        
+
+    def __check_break_combat(self):
+        if all([not c.active for c in self.__current.cards]): 
+            self.cease_fire(reason='success')
+            return True
+        elif all([not c.active for c in self.cards]): 
+            self.cease_fire(reason='failure')
+            return True
+        else: 
+            return False
+
+    def __round_action(self, c, strategy='random'): 
+        if strategy == 'random': aim = self.__rand_aim(c)
+        act_dict = {
+            'active': True, 
+            'weapon': str(c.get_weapon().name), 
+            'state': c.state, 
+            'hp': c.hp, 
+            'hpmax': c.hpmax, 
+            'aim': str(aim.name), 
+            'aim_hp': aim.hp, 
+            'aim_hpmax': aim.hpmax
+        }
+        hit_dice = d20()
+        if hit_dice == 1: 
+            act_dict['r1']  = True
+            act_dict['r20'] = False
+            hit, hurt, kill = self.__great_failure(c)
+        elif hit_dice == 20: 
+            act_dict['r1']  = False
+            act_dict['r20'] = True
+            hit, hurt, kill = self.__great_success(c, aim)
+        else: 
+            act_dict['r1']  = False
+            act_dict['r20'] = False
+            hit, hurt, kill = self.__normal_attack(c, aim, hit_dice)
+        act_dict['hit']  = hit
+        act_dict['hurt'] = hurt
+        act_dict['kill'] = kill
+        return act_dict
 
     def __rand_aim(self, c):
         if c in self.cards: 
@@ -167,62 +213,79 @@ class Game(Team):
             alives = list(filter(lambda c: c.active, self.cards))
             return random.sample(alives, 1)[0]
 
-    def __round_action(self, c, aim): 
-        f = open(self.file,'a')
-        repr = f"    {c.name}攻击{aim.name}"
-        f.write(f"    {c.name}(HP={c.hp}/{c.hpmax}): ")
-        hit = d20() 
-        if hit == 1: 
-            hurt = random.randint(1, c.hurt_rand) + c.hurt_add
-            c.hp -= hurt
-            repr += f"（大失败，对自身造成{hurt}伤害）"
-            f.write(f"Great Failure, {hurt} hurt to self. \n")
+    def __great_failure(self, c):
+        hit = False
+        hurt = d4()
+        c.hp -= hurt
+        kill = self.__check_kill(c)
+        return hit, hurt, kill
+
+    def __great_success(self, c, aim): 
+        hit = True
+        hurt = 2*c.get_hurt()
+        aim.hp -= hurt
+        kill = self.__check_kill(aim)
+        return hit, hurt, kill
+
+    def __normal_attack(self, c, aim, dice_value):
+        hit_value = c.get_hit(dice_value)
+        if hit_value > aim.ac: 
+            hit = True
+            hurt = c.get_hurt()
+            aim.hp -= hurt
+            kill = self.__check_kill(aim)
         else: 
-            if hit == 20: 
-                multiplier = 2
-                repr += "（大成功）"
-                f.write(f"Great Success, ")
-                great_success = True
-            else: 
-                multiplier = 1
-                great_success = False
-            hit += c.hit_add
-            f.write(f"hit={hit}, ")
-            if hit > aim.ac or great_success: 
-                hurt = random.randint(1, c.hurt_rand) + c.hurt_add
-                hurt *= multiplier
-                repr += f"成功，伤害为{hurt}，"
-                aim.hp -= hurt
-                if aim.hp > 0: 
-                    repr += f"但{aim.name}仍然存活。"
-                elif aim.hp <= 0: 
-                    repr += f"并击杀{aim.name}。"
-                    aim.deactivate()
-                f.write(f"hurt={hurt}, aim={aim.name}(HP={aim.hp}/{aim.hpmax}) \n")
-            else: 
-                repr += '，但失败了。'
-                f.write(f"failed, aim={aim.name}(HP={aim.hp}/{aim.hpmax}) \n")
-        print(repr)
-        f.close()
+            hit = False
+            hurt = 0
+            kill = False
+        return hit, hurt, kill
 
-    def __round_skip(self, c):
-        print(f"    跳过{c.name}")
-        f = open(self.file,'a')
-        f.write(f"    {c.name}(HP={c.hp}/{c.hpmax}): skiped \n")
-        f.close()
+    def __check_kill(self, aim): 
+        if aim.hp > 0: 
+            kill = False
+        elif aim.hp <= 0: 
+            kill = True
+            self.__set_deactive_state(aim)
+        return kill
 
-    def cease_fire(self): 
+    def __set_deactive_state(self, aim):
+        if aim in self.cards: 
+            if aim.hp < -aim.hpmax: 
+                aim.deactivate(death=True)
+            else: 
+                aim.deactivate(coma=True)
+        elif aim in self.__current.cards: 
+            aim.deactivate(death=True)
+
+    def __skip_round(self, c):
+        return {
+            'active': False, 
+            'state': c.state, 
+            'hp': c.hp, 
+            'hpmax': c.hpmax
+        }
+
+    def cease_fire(self, reason=None): 
         self.combating = False
-        self.team_info()
+        if reason == 'success': 
+            print('所有敌人已被消灭。')
+        elif reason == 'failure': 
+            print('全员失去战斗力，失败。')
+        else: 
+            print('战斗结束。')
+        print("团队成员情况：")
+        s = self.team_info()
+        print(s)
+        with open(self.file, 'a') as f: 
+            f.write(f"Combat is over. \n")
+            f.write(s)
+            f.close()
 
     def team_info(self):
-        print("团队成员情况：")
-        f = open(self.file,'a')
+        s = ''
         for c in self.cards: 
-            s = "    %-10s" % c.name + f"HP={c.hp}/{c.hpmax}"
-            print(s)
-            f.write(f"    {c.name}(HP={c.hp}/{c.hpmax})\n")
-        f.close()
+            s += "    %-10s" % c.name + f"HP={c.hp}/{c.hpmax}\n"
+        return s
 
 
 

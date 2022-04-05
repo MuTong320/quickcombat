@@ -20,3 +20,6 @@ def d50():
 
 def d100(): 
     return randint(1,100)
+
+def rd(n):
+    return randint(1,n)
