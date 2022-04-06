@@ -1,7 +1,7 @@
 from . import character, weapon
 from .card import CharacterCard
 from .character import monster, npc
-from .game import Game
+from .table import Game
 from .room import Room
 
 

@@ -1,5 +1,5 @@
 from os import kill
-from .weapon.general import Weapon, Hands
+from .weapon.general import Attack, Hands
 from .dice import *
 
 class CharacterCard:
@@ -96,7 +96,7 @@ class CharacterCard:
     def set_weapon(self, weapon): 
         if type(weapon) == str: 
             weapon = self.__get_weapon(weapon)
-        if isinstance(weapon, Weapon): 
+        if isinstance(weapon, Attack): 
             if weapon not in self.arsenal: self.add_weapon(weapon, use=True)
         else: 
             print("Setting failed.")
@@ -119,7 +119,7 @@ class CharacterCard:
     def remove_weapon(self, *weapon): 
         for w in weapon: 
             if type(w) == str: w = self.__get_weapon(weapon)
-            if isinstance(w, Weapon): 
+            if isinstance(w, Attack): 
                 if w in self.arsenal: self.arsenal.remove(w)
     
     def get_init(self, dice_value=None): 
@@ -136,7 +136,7 @@ class CharacterCard:
         else: 
             if type(weapon) == str: 
                 w = self.__get_weapon(weapon)
-            if isinstance(weapon, Weapon): 
+            if isinstance(weapon, Attack): 
                 w = weapon
         return w() + self.__hurt_add
 
