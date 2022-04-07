@@ -18,11 +18,11 @@ class CharacterCard:
         self.__init_arsenal()
         self.combat_number = 0
         self.history = []
-    
+
     def __repr__(self): 
         repr  = f"CharacterCard object '{self.name}' ({self.hp}/{self.hpmax})"
         return repr
-    
+
     def story(self): 
         for event in self.history: 
             if event['type'] == 'combat': 
@@ -47,7 +47,7 @@ class CharacterCard:
             'aim_hpmax': int
         }
         """
-    
+
     def natural_format(self, act_dict, hp=False): 
         s = str(self.name)
         if act_dict['active']: 
@@ -78,7 +78,7 @@ class CharacterCard:
         else: 
             s += f"因{act_dict['state']}跳过回合。"
         return s
-    
+
     def activate(self): 
         self.active = True
 
@@ -87,12 +87,12 @@ class CharacterCard:
         if death : self.state = '死亡'
         if coma  : self.state = '昏迷'
         if fetter: self.state = '束缚'
-    
+
     def __init_arsenal(self): 
         hands = Hands()
         self.arsenal = [hands, ]
         self.__weapon = hands
-    
+
     def set_weapon(self, weapon): 
         if type(weapon) == str: 
             weapon = self.__get_weapon(weapon)
@@ -100,7 +100,7 @@ class CharacterCard:
             if weapon not in self.arsenal: self.add_weapon(weapon, use=True)
         else: 
             print("Setting failed.")
-    
+
     def get_weapon(self): 
         return self.__weapon
 
@@ -115,21 +115,21 @@ class CharacterCard:
                 self.__weapon = weapon[0]
             else: 
                 print("Set only one weapon if use.")
-    
+
     def remove_weapon(self, *weapon): 
         for w in weapon: 
             if type(w) == str: w = self.__get_weapon(weapon)
             if isinstance(w, Attack): 
                 if w in self.arsenal: self.arsenal.remove(w)
-    
+
     def get_init(self, dice_value=None): 
         if not dice_value: dice_value = d20()
         return dice_value + self.__init_add
-    
+
     def get_hit(self, dice_value=None): 
         if not dice_value: dice_value = d20()
         return dice_value + self.__hit_add
-    
+
     def get_hurt(self, weapon=None): 
         if not weapon: 
             w = self.__weapon
@@ -139,4 +139,6 @@ class CharacterCard:
             if isinstance(weapon, Attack): 
                 w = weapon
         return w() + self.__hurt_add
+
+
 

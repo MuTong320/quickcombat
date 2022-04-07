@@ -25,7 +25,7 @@ class Game(Team):
         f.write(time.asctime())
         f.write('\n')
         f.close()
-    
+
     def __repr__(self): 
         s = '团队成员：\n'
         for c in self.cards: 
@@ -43,7 +43,7 @@ class Game(Team):
         self.rooms     = [self.world, ]
         self.__current = self.world
         self.combating = False
-    
+
     def goto_room(self, room):
         if type(room) == str: room = self.get_room(room)
         if type(room) == Room: self.__current = room
@@ -54,7 +54,7 @@ class Game(Team):
         else: 
             for c in self.rooms: 
                 if c.name == name: return c
-    
+
     def add_room_obj(self, *r): 
         self.rooms += list(r)
 
@@ -73,11 +73,11 @@ class Game(Team):
             name = f'room({i+1})'
             if name not in all_names: break
         return name
-    
+
     def remove_room(self, *to_remove_names): 
         for r in self.rooms: 
             if r.name in to_remove_names: self.rooms.remove(r)
-    
+
     def combat(self, room=None, round=0): 
         if room: self.goto_room(room)
         self.__init_dict = {}
@@ -136,14 +136,14 @@ class Game(Team):
             s += "%-10s" % c.name
             s += f" (initiative={self.__init_dict[c]}) \n"
         return s
-    
+
     def manual_init(self, **character_value): 
         for c, init in character_value.items(): 
             if type(c) == str: c = self.get_card(c)
             if type(c) == CharacterCard: 
                 self.__init_dict[c] = init
         self.__sort_init()
-    
+
     def auto_round(self): 
         self.__round += 1
         print(f"第{self.__round}轮战斗：")
@@ -163,7 +163,6 @@ class Game(Team):
                 f.write(line)
                 f.close()
             if self.__check_break_combat(): break
-        
 
     def __check_break_combat(self):
         if all([not c.active for c in self.__current.cards]): 

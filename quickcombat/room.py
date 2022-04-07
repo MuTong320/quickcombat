@@ -7,12 +7,12 @@ class RoomBase:
     def __init__(self, *cards): 
         self.cards   = []
         self.add_card(*cards)
-    
+
     def add_card(self, *cards, wake=True): 
         if cards: 
             self.cards += cards
             if wake: self.wakeup(*cards)
-    
+
     def remove_card(self, *characters): 
         for c in characters:
             if type(c) == str: c = self.get_card(c)
@@ -24,7 +24,7 @@ class RoomBase:
         else: 
             for c in self.cards: 
                 if c.name == name: return c
-    
+
     def wakeup(self, *characters): 
         if not characters: characters = self.cards
         for c in characters:
@@ -47,12 +47,12 @@ class Room(RoomBase):
     def __init__(self, *enemies, name='unnamed room'):
         super().__init__(*enemies)
         self.name  = name
-    
+
     def __repr__(self): 
         repr = "Room object, "
         repr += self.room_info()
         return repr
-    
+
     def room_info(self): 
         repr = f"房间{self.name}\n共{len(self.cards)}个敌人：\n"
         if self.cards: 
@@ -70,7 +70,7 @@ class Room(RoomBase):
                 self.__check_name(c)
                 self.cards.append(c)
             if active: self.wakeup(*cards)
-    
+
     def __check_name(self, c): 
         all_names = [c.name for c in self.cards]
         if c.name not in all_names: 
@@ -83,3 +83,5 @@ class Room(RoomBase):
                 if new_name not in all_names: 
                     break
             c.name = new_name
+
+
